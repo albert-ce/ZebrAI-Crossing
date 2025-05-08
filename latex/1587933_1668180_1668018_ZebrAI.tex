@@ -205,7 +205,7 @@ Ara bé, per a fer una bona avaluació, també necessitarem imatges que no conti
 
 Així doncs, hem incorporat un nou atribut als existents en el dataset d'ImVisible (Explicació a l'apartat \ref{sec:datasets}). Aquest mesura l’orientació del pas de zebra en relació amb una trajectòria recta de creuament, i es calcula a partir de la recta definida per les coordenades \texttt{(x1, y1) i (x2, y2)}:
 \begin{equation*}
-	\theta=atan(\frac{x_2-x_1}{y_2-y_1})
+\theta = \tan^{-1}\left( \frac{x_2 - x_1}{y_2 - y_1} \right)
 \end{equation*} 
 En la aquesta figura es pot veure un exemple:
 \begin{figure}[!h]
