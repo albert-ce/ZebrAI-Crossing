@@ -21,6 +21,7 @@
 \usepackage{enumitem}
 \setlist[itemize]{noitemsep}
 \setlist[enumerate]{noitemsep}
+\usepackage[most]{tcolorbox}
 
 \let\OLDthebibliography\thebibliography
 \renewcommand\thebibliography[1]{
@@ -143,21 +144,104 @@ Per tant, els atributs finals que té cada imatge del dataset que hem construït
 %	\label{fig:f}
 %\end{figure}
 
+\subsection{Extracció dels atributs del pas de zebra}
+
+En aquest apartat hem usat la ROI prèvia per determinar l’orientació i la posició inicial del pas de zebra. Ho hem fet identificant-ne primer les vores paral·leles.
+
+Les imatges amb les que hem treballat tenien molt \textbf{soroll impulsional}, i a més, normalment la pintura dels passos de zebra presenta molts desperfectes, pel que hem hagut d'aplicar un filtratge de soroll. N'hem provat quatre: mediana, Gaussià, bilateral (similar al Gaussià però mantenint millor les vores) i morfologia de màxims (dilate, per omplir forats a la pintura).
 \begin{figure}[!h]
 	\centering
 	\begin{subfigure}{0.46\columnwidth}
 		\includegraphics[width=\linewidth]{figs/neu1}
 		\caption{Imatge original}
-		\label{fig:classes}
 	\end{subfigure}
 	\quad
 	\begin{subfigure}{0.46\columnwidth}
 		\includegraphics[width=\linewidth]{figs/med_neu1}
 		\caption{Filtre de mediana}
-		\label{fig:regio}
 	\end{subfigure}
 	\caption{Exemple del filtratge de soroll}
+	\label{fig:soroll}
 \end{figure}
+\\
+El \textbf{filtre de mediana} ha donat un bon resultat visual: les barres del pas de zebra es veuen nítides i, en casos com el de la Figura.~\ref{fig:soroll}, on plou, elimina tot el soroll de la pluja, a diferència de les altres opcions.
+
+Una vegada hem tingut la imatge filtrada, hem decidit treure'n una màscara binària per detectar-ne millor les vores.
+\vspace*{0.5em}
+\\
+{\small	\textbf{El problema del top-hat:}}\vspace*{0.2em}\\
+En algunes imatges, les ombres han dificultat l’extracció de la màscara binària. La tècnica del \textbf{top-hat} és útil en situacions així, però ens hem trobat amb un problema: no hi ha un kernel que funcioni bé ni per a totes les imatges ni dins la mateixa imatge, ja que la mida i orientació de les barres varia amb la perspectiva. Un kernel petit només destaca les barres llunyanes, i un de gran no elimina les ombres. Així doncs, en aquests casos la precisió dependrà de les parts menys afectades per les ombres.
+\vspace*{0.5em}
+\\
+Totes les imatges són diferents, motiu pel qual aplicar un llindar constant a totes elles no era una opció viable. Hem utilitzat el llindar adaptatiu \textbf{Otsu}, implementat en la funció d'\texttt{OpenCV}. Ara bé, analitzant l'histograma d'algunes de les imatges, hem vist que l'Otsu no segueix la nostra intuició d'un millor llindar: situar-lo a la vall entre els pics dels clars i els foscos.
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=\linewidth]{figs/thresholds}
+	\caption{Exemple d'histograma amb els llindars tractats}
+	\label{fig:f}
+\end{figure}
+\\
+Així doncs, hem trobat una solució per corregir el llindar que consisteix a fer una \textbf{mixtura de gaussianes} sobre mostres reduïdes de la imatge (per eficiència) i escollir el mínim de l’histograma suavitzat entre els pics de les gaussianes estimades. A la Figura~\ref{fig:f} es poden veure les diferències entre els dos mètodes.
+
+Feta la binarització amb l’últim llindar, l’hem utilitzada per extreure les vores de les barres del pas de zebra. Hem provat dues tècniques: \textbf{Canny} i \textbf{LoG}. Totes dues han donat resultats similars, però hem continuat amb \textbf{LoG} per dues raons: no depèn d’hiperparàmetres com els llindars de Canny, i no fa vores fines, fet que restringeix menys la detecció de línies amb Hough.
+\begin{figure}[!h]
+	\centering
+	\begin{subfigure}{0.31\columnwidth}
+		\includegraphics[width=\linewidth]{figs/mog}
+		\caption{Imatge binaritzada}
+	\end{subfigure}
+	\ 
+	\begin{subfigure}{0.31\columnwidth}
+		\includegraphics[width=\linewidth]{figs/canny}
+		\caption{Canny}
+	\end{subfigure}
+	\ 
+	\begin{subfigure}{0.31\columnwidth}
+		\includegraphics[width=\linewidth]{figs/log}
+		\caption{LoG}
+	\end{subfigure}
+	\caption{Exemple de detecció de vores}
+	\label{fig:hough}
+\end{figure}
+\\
+Amb les vores del pas de zebra detectades, només ha faltat extreure les rectes amb \textbf{transformades de Hough}, però aquesta tècnica també depèn d'un llindar. Quan és molt alt no es detecten totes les línies, i quan és molt baix es detecten masses línies errònies. És una tècnica molt sensible a errors, com hem pogut comprovar quan la hem implementat a mà a mode de prova. Per aconseguir millors resultats, hem fet aquest \textbf{mètode propi}:
+\vspace*{-0.15em}
+\begin{enumerate}[]
+	{\small
+	\item Apliquem Hough amb llindar alt per obtenir poques línies fiables
+	\item Trobem les seves interseccions (punts de fuga)
+	\item Agrupem les interseccions properes amb clusterització
+	\item Apliquem Hough amb llindar baix per obtenir moltes línies
+	\item Eliminem les línies que no es dirigeixen als punts de fuga (errònies)
+}
+\end{enumerate}
+
+\begin{figure}[!h]
+	\centering
+	\begin{subfigure}{0.45\columnwidth}
+		\includegraphics[width=\linewidth]{figs/Hough_restrictiu}
+		\caption{Llindar restrictiu}
+	\end{subfigure}
+	\quad 
+	\begin{subfigure}{0.45\columnwidth}
+		\includegraphics[width=\linewidth]{figs/Hough_molt_tolerant}
+		\caption{Llindar molt tolerant}
+	\end{subfigure}
+	\ 
+	\begin{subfigure}{0.45\columnwidth}
+		\includegraphics[width=\linewidth]{figs/filtrat_fuga}
+		\caption{Filtratge segons punt de fuga}
+	\end{subfigure}
+	\quad
+	\begin{subfigure}{0.45\columnwidth}
+		\includegraphics[width=\linewidth]{figs/filtrat_proximitat}
+		\caption{Filtratge segons proximitat}
+	\end{subfigure}
+	\caption{Exemple de filtratge de línies}
+	\label{fig:vores}
+\end{figure}
+
+Aquest
 
 
 %\begin{table}[!h]
