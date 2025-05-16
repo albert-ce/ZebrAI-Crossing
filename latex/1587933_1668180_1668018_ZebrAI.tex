@@ -12,6 +12,7 @@
 \usepackage{float}
 \usepackage{subcaption}
 \usepackage{wrapfig}
+\usepackage{fontawesome5}
 \usepackage[top=2.5cm, bottom=1.3cm, left=1.2cm, right=1.2cm]{geometry}
 \usepackage[figurename=Fig.,tablename=Taula,font={small,sf}]{caption}
 %\usepackage[font={small,sf}]{caption}
@@ -59,16 +60,20 @@ Albert Capdevila Estadella (1587933), Levon Kesoyan Galstyan (1668018), Luis Mar
 \bigskip
 
 \noindent 
-\textbf{Keywords}---Image classification, noisy web data, CNNs, ubiquitous reweighting.
-}
-\bigskip
+\textbf{Keywords} --- Image classification, noisy web data, CNNs, ubiquitous reweighting.
+
+%\bigskip
+%
+%\noindent
+%\textbf{Repository} --- 
+%\faGithub\ \  \href{https://github.com/albert-ce/ZebrAI-Crossing}{\small \textbf{albert-ce/ZebrAI-Crossing}}
 
 {\vrule depth 0pt height 0.5pt width 3cm\hspace{7.5pt}%
 \raisebox{-3.5pt}{\fontfamily{pzd}\fontencoding{U}\fontseries{m}\fontshape{n}\fontsize{11}{12}\selectfont\char70}%
 \hspace{7.5pt}\vrule depth 0pt height 0.5pt width 3cm\relax}
 
 %\bigskip
-
+}
 
 \section{Introducció}
 
@@ -143,6 +148,9 @@ Per tant, els atributs finals que té cada imatge del dataset que hem construït
 %	\caption{Angle d'orientació del pas de zebra}
 %	\label{fig:f}
 %\end{figure}
+
+\subsection{Detecció de semàfors i ROI amb YOLO}
+En la part del projecte, hem utilitzat un model preentrenat de YOLO el qual detecta passos de zebra i semàfors. Respecte als passos de zebra, hem obtingut la ROI que hem fet servir per a el tractament posterior, respecte als semàfors, el model en dóna informació sobre si aquest es troba en vermell o en verd, assolint el nostre objectiu principal. A l'última secció d'aquest apartat es pot veure la avaluació que hem fet d'aquesta detecció.
 
 \subsection{Extracció dels atributs del pas de zebra}
 
@@ -240,8 +248,13 @@ Amb les vores del pas de zebra detectades, només ha faltat extreure les rectes 
 	\caption{Exemple de filtratge de línies}
 	\label{fig:vores}
 \end{figure}
+Aquest   ---
 
-Aquest
+Ara que ja tenim les línees filtrades, podem limitar la seva longitud segons la longitud de les vores trobades anteriorment amb LoG. D'aquesta manera ens queden les línies bastant ben delimitades a la imatge original. [FOTO]
+
+El següent pas és trobar les línies verticals, ja que el Hough no les detecta. Per fer-ho, agafem els extrems de cada línia i, mitjançant un RANSAC, ens quedem amb els dos punts que formin la recta que estigui més a prop de més punts a la vegada. Així doncs, una vegada tenim les dues rectes verticals, podem intersectar les línees horitzontals amb les verticals i obtenir, per tant, el pas de zebra ben limitat.
+
+Per últim, ara que tenim tots els punts d'intersecció calculats, podem calcular l'angle del pas de zebra. Per fer-ho, primerament hem de calcular els punts mitjos entre les dues interseccions de cada línia. [FOTO?] Ara, tenint aquests punts, podem treure l'angle aplicant un RANSAC a aquests punts.
 
 
 %\begin{table}[!h]
