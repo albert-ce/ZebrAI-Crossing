@@ -13,6 +13,10 @@
 \usepackage{subcaption}
 \usepackage{wrapfig}
 \usepackage{fontawesome5}
+
+\setlength{\intextsep}{5pt}
+\setlength{\textfloatsep}{10pt}
+
 \usepackage[top=2.5cm, bottom=1.3cm, left=1.2cm, right=1.2cm]{geometry}
 \usepackage[figurename=Fig.,tablename=Taula,font={small,sf}]{caption}
 %\usepackage[font={small,sf}]{caption}
@@ -157,6 +161,7 @@ En la part del projecte, hem utilitzat un model preentrenat de YOLO el qual dete
 En aquest apartat hem usat la ROI prèvia per determinar l’orientació i la posició inicial del pas de zebra. Ho hem fet identificant-ne primer les vores paral·leles.
 
 Les imatges amb les que hem treballat tenien molt \textbf{soroll impulsional}, i a més, normalment la pintura dels passos de zebra presenta molts desperfectes, pel que hem hagut d'aplicar un filtratge de soroll. N'hem provat quatre: mediana, Gaussià, bilateral (similar al Gaussià però mantenint millor les vores) i morfologia de màxims (dilate, per omplir forats a la pintura).
+\vspace{5pt}
 \begin{figure}[h]
 	\centering
 	\begin{subfigure}{0.46\columnwidth}
@@ -192,6 +197,7 @@ Totes les imatges són diferents, motiu pel qual aplicar un llindar constant a t
 Així doncs, hem trobat una solució per corregir el llindar que consisteix a fer una \textbf{mixtura de gaussianes} sobre mostres reduïdes de la imatge (per eficiència) i escollir el mínim de l’histograma suavitzat entre els pics de les gaussianes estimades. A la Figura~\ref{fig:f} es poden veure les diferències entre els dos mètodes.
 
 Feta la binarització amb l’últim llindar, l’hem utilitzada per extreure les vores de les barres del pas de zebra. Hem provat dues tècniques: \textbf{Canny} i \textbf{LoG}. Totes dues han donat resultats similars, però hem continuat amb \textbf{LoG} per dues raons: no depèn d’hiperparàmetres com els llindars de Canny, i no fa vores fines, fet que restringeix menys la detecció de línies amb Hough.
+\vspace{5pt}
 \begin{figure}[h]
 	\centering
 	\begin{subfigure}{0.31\columnwidth}
@@ -223,19 +229,18 @@ Amb les vores del pas de zebra detectades, només ha faltat extreure les rectes 
 	\item Eliminem les línies que no es dirigeixen als punts de fuga (errònies)
 }
 \end{enumerate}
-
 \begin{figure}[h]
 	\centering
-	\begin{subfigure}{0.45\columnwidth}
-		\includegraphics[width=\linewidth]{figs/Hough_restrictiu}
-		\caption{Llindar restrictiu}
-	\end{subfigure}
-	\quad 
-	\begin{subfigure}{0.45\columnwidth}
-		\includegraphics[width=\linewidth]{figs/Hough_molt_tolerant}
-		\caption{Llindar molt tolerant}
-	\end{subfigure}
-	\ 
+%	\begin{subfigure}{0.45\columnwidth}
+%		\includegraphics[width=\linewidth]{figs/Hough_restrictiu}
+%		\caption{Llindar restrictiu}
+%	\end{subfigure}
+%	\quad 
+%	\begin{subfigure}{0.45\columnwidth}
+%		\includegraphics[width=\linewidth]{figs/Hough_molt_tolerant}
+%		\caption{Llindar molt tolerant}
+%	\end{subfigure}
+%	\ 
 	\begin{subfigure}{0.45\columnwidth}
 		\includegraphics[width=\linewidth]{figs/filtrat_fuga}
 		\caption{Filtratge segons punt de fuga}
@@ -251,12 +256,29 @@ Amb les vores del pas de zebra detectades, només ha faltat extreure les rectes 
 \noindent
 Aquest mètode recupera més línies, però introdueix duplicats. Els hem eliminat descartant les línies que intersecten dins la imatge amb angles més allunyats de la mitjana (Veure Fig.~\ref{fig:vores})
 
-Tenint les línies filtrades, hem limitat la seva longitud segons les vores trobades anteriorment. És a dir, a partir dels booleans de les vores, trobem els punts extrems de cada línia. [FOTO]
+Tenint les línies filtrades, hem limitat la seva longitud segons les vores trobades anteriorment. És a dir, a partir dels booleans de les vores, trobem els punts extrems de cada línia.
 
-El següent pas és trobar les línies verticals, ja que el Hough no les detecta. Per fer-ho, agafem els extrems de cada línia i, mitjançant un RANSAC, ens quedem amb els dos punts que formin la recta que estigui més a prop de més punts a la vegada. Així doncs, una vegada tenim les dues rectes verticals, podem intersectar les línies horitzontals amb les verticals i obtenir, per tant, el pas de zebra ben limitat.
+El següent pas ha estat detectar les línies verticals, que el mètode de Hough no detecta. Per fer-ho, hem utilitzat els extrems trobats de cada línia i, mitjançant RANSAC, hem seleccionat els dos punts que defineixen la recta amb més suport (és a dir, la més propera a més punts simultàniament). Un cop obtingudes aquestes dues línies verticals, intersectem les línies horitzontals amb elles per delimitar clarament els límits del pas de zebra.
 
-Per últim, ara que tenim tots els punts d'intersecció calculats, podem calcular l'angle del pas de zebra. Per fer-ho, primerament hem de calcular els punts mitjos entre les dues interseccions de cada línia. [FOTO?] Ara, tenint aquests punts, podem treure l'angle aplicant un RANSAC a aquests punts.
+Per acabar, hem calculat l’angle del pas de zebra obtenint els punts mitjos entre les dues interseccions de cada línia horitzontal. 
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}{0.46\columnwidth}
+		\includegraphics[width=\linewidth]{figs/limit}
+		\caption{Línies amb longitud limitada}
+	\end{subfigure}
+	\quad
+	\begin{subfigure}{0.46\columnwidth}
+		\includegraphics[width=\linewidth]{figs/mid_points}
+		\caption{Línies verticals i punts mitjos}
+	\end{subfigure}
+	\caption{Delimitació del pas de zebra reconstruïda}
+	\label{fig:lines}
+\end{figure}
+\\
+A partir d’aquests punts centrals, hem aplicat RANSAC per ajustar una recta i n’hem extret l’angle respecte a l’eix vertical. Per últim, també hem extret el punt mig més baix (més proper) com a punt d'inici del pas de zebra.
 
+\subsection{Avaluació de rendiment}
 
 %\begin{table}[!h]
 %\centering
@@ -273,7 +295,7 @@ Per últim, ara que tenim tots els punts d'intersecció calculats, podem calcula
 %\end{table}
 
 
-%\section{Conclusions}
+\section{Conclusions}
 
 
 \begin{thebibliography}{9}\label{sec:biblio}
