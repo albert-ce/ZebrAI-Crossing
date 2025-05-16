@@ -62,11 +62,11 @@ Albert Capdevila Estadella (1587933), Levon Kesoyan Galstyan (1668018), Luis Mar
 \noindent 
 \textbf{Keywords} --- Image classification, noisy web data, CNNs, ubiquitous reweighting.
 
-%\bigskip
-%
-%\noindent
-%\textbf{Repository} --- 
-%\faGithub\ \  \href{https://github.com/albert-ce/ZebrAI-Crossing}{\small \textbf{albert-ce/ZebrAI-Crossing}}
+\bigskip
+
+\noindent
+\textbf{Repository} ---\ \ 
+\faGithub\ \  \href{https://github.com/albert-ce/ZebrAI-Crossing}{\small \textbf{albert-ce/ZebrAI-Crossing}}
 
 {\vrule depth 0pt height 0.5pt width 3cm\hspace{7.5pt}%
 \raisebox{-3.5pt}{\fontfamily{pzd}\fontencoding{U}\fontseries{m}\fontshape{n}\fontsize{11}{12}\selectfont\char70}%
@@ -157,7 +157,7 @@ En la part del projecte, hem utilitzat un model preentrenat de YOLO el qual dete
 En aquest apartat hem usat la ROI prèvia per determinar l’orientació i la posició inicial del pas de zebra. Ho hem fet identificant-ne primer les vores paral·leles.
 
 Les imatges amb les que hem treballat tenien molt \textbf{soroll impulsional}, i a més, normalment la pintura dels passos de zebra presenta molts desperfectes, pel que hem hagut d'aplicar un filtratge de soroll. N'hem provat quatre: mediana, Gaussià, bilateral (similar al Gaussià però mantenint millor les vores) i morfologia de màxims (dilate, per omplir forats a la pintura).
-\begin{figure}[!h]
+\begin{figure}[h]
 	\centering
 	\begin{subfigure}{0.46\columnwidth}
 		\includegraphics[width=\linewidth]{figs/neu1}
@@ -182,7 +182,7 @@ En algunes imatges, les ombres han dificultat l’extracció de la màscara bin�
 \vspace*{0.5em}
 \\
 Totes les imatges són diferents, motiu pel qual aplicar un llindar constant a totes elles no era una opció viable. Hem utilitzat el llindar adaptatiu \textbf{Otsu}, implementat en la funció d'\texttt{OpenCV}. Ara bé, analitzant l'histograma d'algunes de les imatges, hem vist que l'Otsu no segueix la nostra intuició d'un millor llindar: situar-lo a la vall entre els pics dels clars i els foscos.
-\begin{figure}[!h]
+\begin{figure}[h]
 	\centering
 	\includegraphics[width=\linewidth]{figs/thresholds}
 	\caption{Exemple d'histograma amb els llindars tractats}
@@ -192,7 +192,7 @@ Totes les imatges són diferents, motiu pel qual aplicar un llindar constant a t
 Així doncs, hem trobat una solució per corregir el llindar que consisteix a fer una \textbf{mixtura de gaussianes} sobre mostres reduïdes de la imatge (per eficiència) i escollir el mínim de l’histograma suavitzat entre els pics de les gaussianes estimades. A la Figura~\ref{fig:f} es poden veure les diferències entre els dos mètodes.
 
 Feta la binarització amb l’últim llindar, l’hem utilitzada per extreure les vores de les barres del pas de zebra. Hem provat dues tècniques: \textbf{Canny} i \textbf{LoG}. Totes dues han donat resultats similars, però hem continuat amb \textbf{LoG} per dues raons: no depèn d’hiperparàmetres com els llindars de Canny, i no fa vores fines, fet que restringeix menys la detecció de línies amb Hough.
-\begin{figure}[!h]
+\begin{figure}[h]
 	\centering
 	\begin{subfigure}{0.31\columnwidth}
 		\includegraphics[width=\linewidth]{figs/mog}
@@ -224,7 +224,7 @@ Amb les vores del pas de zebra detectades, només ha faltat extreure les rectes 
 }
 \end{enumerate}
 
-\begin{figure}[!h]
+\begin{figure}[h]
 	\centering
 	\begin{subfigure}{0.45\columnwidth}
 		\includegraphics[width=\linewidth]{figs/Hough_restrictiu}
@@ -248,11 +248,12 @@ Amb les vores del pas de zebra detectades, només ha faltat extreure les rectes 
 	\caption{Exemple de filtratge de línies}
 	\label{fig:vores}
 \end{figure}
-Aquest   ---
+\noindent
+Aquest mètode recupera més línies, però introdueix duplicats. Els hem eliminat descartant les línies que intersecten dins la imatge amb angles més allunyats de la mitjana (Veure Fig.~\ref{fig:vores})
 
-Ara que ja tenim les línees filtrades, podem limitar la seva longitud segons la longitud de les vores trobades anteriorment amb LoG. D'aquesta manera ens queden les línies bastant ben delimitades a la imatge original. [FOTO]
+Tenint les línies filtrades, hem limitat la seva longitud segons les vores trobades anteriorment. És a dir, a partir dels booleans de les vores, trobem els punts extrems de cada línia. [FOTO]
 
-El següent pas és trobar les línies verticals, ja que el Hough no les detecta. Per fer-ho, agafem els extrems de cada línia i, mitjançant un RANSAC, ens quedem amb els dos punts que formin la recta que estigui més a prop de més punts a la vegada. Així doncs, una vegada tenim les dues rectes verticals, podem intersectar les línees horitzontals amb les verticals i obtenir, per tant, el pas de zebra ben limitat.
+El següent pas és trobar les línies verticals, ja que el Hough no les detecta. Per fer-ho, agafem els extrems de cada línia i, mitjançant un RANSAC, ens quedem amb els dos punts que formin la recta que estigui més a prop de més punts a la vegada. Així doncs, una vegada tenim les dues rectes verticals, podem intersectar les línies horitzontals amb les verticals i obtenir, per tant, el pas de zebra ben limitat.
 
 Per últim, ara que tenim tots els punts d'intersecció calculats, podem calcular l'angle del pas de zebra. Per fer-ho, primerament hem de calcular els punts mitjos entre les dues interseccions de cada línia. [FOTO?] Ara, tenint aquests punts, podem treure l'angle aplicant un RANSAC a aquests punts.
 
