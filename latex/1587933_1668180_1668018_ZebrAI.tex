@@ -13,7 +13,7 @@
 \usepackage{subcaption}
 \usepackage{wrapfig}
 \usepackage{fontawesome5}
-
+\usepackage{tabularx}
 \setlength{\intextsep}{5pt}
 \setlength{\textfloatsep}{10pt}
 
@@ -56,15 +56,15 @@ Albert Capdevila Estadella (1587933), Levon Kesoyan Galstyan (1668018), Luis Mar
 \end{center}
 
 %\bigskip
+\smallskip
+
+\noindent 
+\textbf{Abstract} --- \textbf{ZebrAI Crossing} és un sistema de visió per computador que detecta passos de zebra i semàfors de vianants, i en determina l’orientació, la posició i l’estat. Per fer-ho, es combinen tècniques tradicionals com filtratge de soroll, binarització adaptativa, detecció de vores, transformades de Hough i RANSAC per extreure els atributs del pas de zebra amb tècniques de deep learning com YOLO per a la detecció de semàfors. El model s’ha avaluat sobre 7000 imatges, mostrant resultats que, tot i no ser suficientment bons, reflecteixen la complexitat del problema.
+
 \bigskip
 
 \noindent 
-\textbf{Abstract} --- Lorem ipsum dolor sit amet, consectetur adipiscing elit. In auctor est et lacus luctus eleifend. Duis at tincidunt nibh. Nam sed elementum lorem, eu pretium magna. Vestibulum justo urna, imperdiet eget tristique ut, pellentesque vel turp-is. Vivamus et risus tempor, fringilla libero in, semper arcu. Praesent blandit libero vitae rutrum tincidunt. Fusce id justo quis mauris accumsan pellentesque et in massa. Nulla ut eleifend ante. Nunc pretium justo a nibh tincidunt tempus. Fusce auctor tortor nec turpis commodo, vitae posuere nulla mollis. Maecenas non placerat metus. Mauris dolor libero, laoreet quis leo vitae, dignissim lobortis enim. Curabitur in magna nibh. Aenean vel dui eros. Morbi maximus in turpis vitae fermentum.
-
-\bigskip
-
-\noindent 
-\textbf{Keywords} --- Image classification, noisy web data, CNNs, ubiquitous reweighting.
+\textbf{Keywords} --- Zebra crossing detection, edge detection, Hough transform, RANSAC, image binarization, YOLO.
 
 \bigskip
 
@@ -114,10 +114,6 @@ El projecte tracta del desenvolupament d'una aplicació mòbil que detecta passo
 \subsection*{Zebra-crossing Detection for the Partially Sighted \cite{ZebraPartiallySighted}}
 Aquest article utilitza transformacions de Hough i detecció de variacions d'intensitat per a identificar les línies defineixen el pas de zebra. A més, es proven diferents mètodes per diferenciar-los d'imatges d'escales, un basat en homografies i els altres amb restriccions basades en els punts de fuga.
 
-\subsection*{ZebraRecognizer: efficient and precise localization of pedestrian crossings. \cite{ZebraRecognizer}}
-
-Aquest article explica un mètode que combina la càmera amb l’acceleròmetre del mòbil de l'usuari per rectificar la perspectiva abans de detectar els passos de zebra. Una vegada rectificada, l’algorisme detecta els segments amb EDLines i els valida segons solapament i consistència de color. Els autors reporten molts bons resultats, però no els hem pogut replicar perquè la rectificació amb sensors inercials no és aplicable al nostre projecte.
-
 \subsection*{Zebra-crossing detection based on cascaded Hough transform principle and vanishing point characteristics \cite{CascadedHough}}
 
 L'article presenta un estudi per detectar passos de zebra utilitzant un filtratge de Gauss, detecció de vores de Canny i una transformada en cascada de Hough basada en el punt de fuga, sense extreure regions d'interès. També es compara amb la transformada de Hough estàndard, demostrant que la tècnica en cascada obté millors resultats.
@@ -154,7 +150,7 @@ Per tant, els atributs finals que té cada imatge del dataset que hem construït
 %\end{figure}
 
 \subsection{Detecció de semàfors i ROI amb YOLO}
-En la part del projecte, hem utilitzat un model preentrenat de YOLO el qual detecta passos de zebra i semàfors. Respecte als passos de zebra, hem obtingut la ROI que hem fet servir per a el tractament posterior, respecte als semàfors, el model en dóna informació sobre si aquest es troba en vermell o en verd, assolint el nostre objectiu principal. A l'última secció d'aquest apartat es pot veure la avaluació que hem fet d'aquesta detecció.
+En la primera part del projecte, hem utilitzat un model preentrenat de YOLO que detecta passos de zebra i semàfors. Respecte als passos de zebra, hem obtingut la ROI que hem fet servir per al tractament posterior, i respecte als semàfors, el model ja ens dóna informació sobre si aquest es troba en vermell o en verd, assolint el nostre objectiu principal. A l'última secció d'aquest apartat es pot veure la avaluació que hem fet d'aquesta detecció.
 
 \subsection{Extracció dels atributs del pas de zebra}
 
@@ -218,7 +214,7 @@ Feta la binarització amb l’últim llindar, l’hem utilitzada per extreure le
 	\label{fig:hough}
 \end{figure}
 \\
-Amb les vores del pas de zebra detectades, només ha faltat extreure les rectes amb \textbf{transformades de Hough}, però aquesta tècnica també depèn d'un llindar. Quan és molt alt no es detecten totes les línies, i quan és molt baix es detecten masses línies errònies. És una tècnica molt sensible a errors, com hem pogut comprovar quan la hem implementat a mà a mode de prova. Per aconseguir millors resultats, hem fet aquest \textbf{mètode propi}:
+Amb les vores del pas de zebra detectades, només ha faltat extreure les rectes amb \textbf{transformades de Hough}, però aquesta tècnica també depèn d'un llindar. Quan és molt alt no es detecten totes les línies, i quan és molt baix es detecten masses línies errònies. És una tècnica molt sensible a errors, com hem pogut comprovar quan la hem implementat a mà a mode de prova.\footnote{El notebook corresponent es pot veure al repositori.} Per aconseguir millors resultats, hem fet aquest \textbf{mètode propi}:
 \vspace*{-0.15em}
 \begin{enumerate}[]
 	{\small
@@ -256,9 +252,9 @@ Amb les vores del pas de zebra detectades, només ha faltat extreure les rectes 
 \noindent
 Aquest mètode recupera més línies, però introdueix duplicats. Els hem eliminat descartant les línies que intersecten dins la imatge amb angles més allunyats de la mitjana (Veure Fig.~\ref{fig:vores})
 
-Tenint les línies filtrades, hem limitat la seva longitud segons les vores trobades anteriorment. És a dir, a partir dels booleans de les vores, trobem els punts extrems de cada línia.
+Tenint les línies filtrades, hem limitat la seva longitud segons les vores trobades anteriorment.
 
-El següent pas ha estat detectar les línies verticals, que el mètode de Hough no detecta. Per fer-ho, hem utilitzat els extrems trobats de cada línia i, mitjançant RANSAC, hem seleccionat els dos punts que defineixen la recta amb més suport (és a dir, la més propera a més punts simultàniament). Un cop obtingudes aquestes dues línies verticals, intersectem les línies horitzontals amb elles per delimitar clarament els límits del pas de zebra.
+El següent pas ha estat detectar les línies verticals, que el mètode de Hough no detecta. Per fer-ho, hem utilitzat els extrems trobats de cada línia i, mitjançant RANSAC, hem seleccionat els dos punts que defineixen la recta amb més suport (és a dir, la més propera a més punts simultàniament). Un cop obtingudes aquestes dues línies verticals, intersectem les línies horitzontals amb elles per delimitar clarament el pas de zebra.
 
 Per acabar, hem calculat l’angle del pas de zebra obtenint els punts mitjos entre les dues interseccions de cada línia horitzontal. 
 \begin{figure}[h]
@@ -278,24 +274,72 @@ Per acabar, hem calculat l’angle del pas de zebra obtenint els punts mitjos en
 \\
 A partir d’aquests punts centrals, hem aplicat RANSAC per ajustar una recta i n’hem extret l’angle respecte a l’eix vertical. Per últim, també hem extret el punt mig més baix (més proper) com a punt d'inici del pas de zebra.
 
-\subsection{Avaluació de rendiment}
+\subsection{Resultats de rendiment}
 
-%\begin{table}[!h]
-%\centering
-%\begin{tabular}{lccccc}
-% x & sin(x) &	cos(x)& tan(x) &  sec(x) & cosec(x)\\
-%\hline
-%30$^\circ$ & 0.5000 & 0.8660 & 0.5774 & 1.1547 & 2.0000\\
-%45$^\circ$ & 0.7071 & 0.7071 & 1.0000 & 1.4142 & 1.4142\\
-%60$^\circ$ & 0.8660 & 0.5000 & 1.7321 & 2.0000 & 1.1547\\
-%\hline
-%\end{tabular}
-%\caption{ Raons trigonomètriques per diferents valors d’angles.}
-%\label{t:raonstrigonometriques}
-%\end{table}
+Tenint el model fet, només ha calgut fer una cerca d’hiperparàmetres i avaluar-ne els resultats. Hem dividit el conjunt de dades (unes \textbf{7000 imatges}) entre validació (25\%) i prova (75\%). La cerca aleatòria (Random Search) ha executat múltiples avaluacions amb combinacions d’hiperparàmetres, utilitzant com a mètrica el \textbf{MAE} (Mean Absolute Error), per la seva simplicitat i unitats interpretables. Les variables s’han ponderat així: \texttt{x}: 10\%, \texttt{y}: 10\%, \texttt{theta\_rad}: 50\% i \texttt{theta\_deg}: 30\%.
 
+\vspace*{0.5em}
+\noindent
+Els hiperparàmetres amb millor puntuació han sigut:
+
+\noindent
+{\small
+\begin{tabularx}{\columnwidth}{X X}
+\texttt{thr\_option = otsu} & \texttt{ransac\_n\_iter = 1000} \\
+\texttt{ransac\_dist = 15} & \texttt{noise\_option = median} \\
+\texttt{med\_k = 5} & \texttt{low\_thr = 140} \\
+\texttt{high\_thr = 220} & \texttt{edges\_option = canny} \\
+\texttt{canny\_thr1 = 25} & \texttt{canny\_thr2 = 150} \\
+\texttt{line\_dist\_thr = 50} & \texttt{centroids\_sep = 120} \\
+\end{tabularx}
+}
+
+\noindent
+Amb aquests, els resultats del conjunt de prova han sigut:
+\vspace*{3pt}
+\begin{figure}[h]
+	\raggedright
+	\begin{subfigure}{0.31\columnwidth}
+		\includegraphics[width=\linewidth]{figs/zebra}
+	\end{subfigure}
+	\ 
+	\begin{subfigure}{0.31\columnwidth}
+		\includegraphics[width=\linewidth]{figs/ mode}
+	\end{subfigure}
+	\ 
+	\begin{subfigure}{0.31\columnwidth}
+		\includegraphics[width=\linewidth]{figs/blocked}
+	\end{subfigure}
+	\caption{Matrius de confusió amb el conjunt de test}
+	\label{fig:conf}
+\end{figure}
+
+
+\begin{table}[!h]
+\raggedright
+\begin{tabular}{r|cccc}
+Variable  & \texttt{x} & \texttt{y} & \texttt{theta\_rad} &  \texttt{theta\_deg} \\
+\hline
+MAE & 268.6 px & 318.6 px & 0.5940 rad & 34.04º\\
+\end{tabular}
+\caption{MAE amb el conjunt de test}
+\label{t:raonstrigonometriques}
+\end{table}
+
+Hem vist que les matrius de confusió són correctes exceptuant la de \texttt{blocked}. Aquestes depenen del model de YOLO, pel que no hem pogut fer gran cosa al respecte. Això sí, a nivell de riscs, és bo que els errors siguin \textbf{falsos positius} perquè d'aquesta manera no detectem semàfors quan aquests no existeixen.
+
+Respecte als resultats de regressió, hem vist també que són força dolents. Hem prioritzat l'angle respecte la posició ja que és la part més extensa del projecte, i en aquest hem obtingut $34.04^\circ$ de MAE. Aquests gran marge d'error es deu a la complicada detecció de les línies verticals, de les quals depèn molt el càlcul de l'angle. Igualment, estem contents amb els resultats perquè és un bon intent d'aplicar dins un cas real les tècniques vistes a classe.
 
 \section{Conclusions}
+
+Amb aquest projecte hem pogut integrar diferents tècniques de visió per computador per detectar passos de zebra i extreure’n els seus atributs, així com identificar l’estat dels semàfors per a vianants. Tot i això, durant el desenvolupament ens hem trobat amb dificultats importants.
+
+En primer lloc, l’algorisme de \textbf{Hough} ha sigut difícil de controlar-ne els resultats. Depèn fortament dels paràmetres d’entrada, i petits canvis poden provocar que es detectin moltes línies errònies o que no se’n detecti cap. Això ha requerit diverses estratègies de filtratge per tal de millorar-lo.
+
+A més, el fet que la \textbf{il·luminació fos tan diferent} entre imatges ha fet impossible poder extreure de manera fiable el pas de zebra. Ombres, reflexos i condicions ambientals com pluja han afectat molt negativament la binarització i la detecció de vores. Tot i aplicar mètodes adaptatius com Otsu o mixtura de gaussianes, no hem pogut trobar un enfocament que sigui robust a totes les situacions.
+
+Ens hem quedat amb ganes d’explorar més a fons tècniques com la detecció de \textbf{Haar-like features} i de trobar una solució més eficaç al problema del \textbf{top-hat}. Són aspectes que deixem oberts per a treballs futurs.
+
 
 
 \begin{thebibliography}{9}\label{sec:biblio}
